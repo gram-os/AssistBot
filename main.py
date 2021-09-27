@@ -15,10 +15,12 @@ BOT_TOKEN = os.environ['BOT_TOKEN']
 
 client = discord.Client()
 
-animal_path = 'animal-pics/'
+animal_path = 'assets/animal-pics/'
 animal_pics = os.listdir(animal_path)
 
 banned_words = set(["fuck","fucking", "shit", "damn", "ass", "coochie", "dick", "nazi", "bitch", "pussy", "crap", "cummies","bussy","bicho","puñeta", "fk","crapper", "craptastic", "shitter", ])
+
+horny_jail=[]
 
 bot = commands.Bot(command_prefix='-')
 
@@ -47,11 +49,11 @@ async def whos_that_animal(ctx):
   index=random.randrange(0,len(animal_pics))
   if (index==6):
     if random.randrange(0,100) == 50:
-      response = discord.File('animal-pics/'+animal_pics[index])
+      response = discord.File(animal_path+animal_pics[index])
       await ctx.send(response)
     else:
       index=random.randrange(0,len(animal_pics))
-  response = discord.File('animal-pics/'+animal_pics[index])
+  response = discord.File(animal_path+animal_pics[index])
   await ctx.send(file = response)
 
 @bot.command(name='hello', help='Says hello!')
@@ -92,20 +94,32 @@ async def cuomo(ctx):
 
 @bot.command(name='samuel', help='samuel')
 async def samuel(ctx):
-  file = discord.File('samuel.jpg')
+  file = discord.File('assets/samuel.jpg')
   await ctx.send(file=file)
 
 @bot.command(name='bonk', help='horny bonk someone')
-async def bonk(ctx, member:discord.Member):
+async def bonk(ctx, member:typing.Optional[discord.Member]):
   animated_emoji=discord.utils.get(ctx.guild.emojis,name='BonkDOGE')
   regular_emoji=discord.utils.get(ctx.guild.emojis,name='BONK')
 
-  if animated_emoji: 
-    await ctx.send(f"{member.mention}\n{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}")
+  if member:
+    if animated_emoji: 
+      await ctx.send(f"{member.mention}\n{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}")
+    elif regular_emoji:
+      await ctx.send(f"{member.mention}\n{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}")
+    else:
+      await ctx.send("BONK")
   else:
-    await ctx.send(f"{member.mention}\n{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}")
+    if animated_emoji: 
+      await ctx.send(f"{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}{animated_emoji}")
+    elif regular_emoji:
+      await ctx.send(f"{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}{regular_emoji}")
+    else:
+      await ctx.send("BONK")
+
 
 async def flashVC(ctx, target:typing.Optional[discord.Member]):
+  og_channel = target.voice.channel
   channel = discord.utils.get(ctx.guild.voice_channels, name = "warzone")
 
   if ctx.author.voice:
@@ -114,15 +128,16 @@ async def flashVC(ctx, target:typing.Optional[discord.Member]):
         channel = target.voice.channel
       await target.move_to(channel)
       voice = await channel.connect()
-      voice.play(discord.FFmpegPCMAudio('flashbang_sound_effect.mp3'))
+      voice.play(discord.FFmpegPCMAudio('assets/flashbang_sound_effect.mp3'))
       await asyncio.sleep(8)
       await ctx.guild.voice_client.disconnect()
+      await target.move_to(og_channel)
   else:
     print(f"{target} was not connected to VC")
 
 @bot.command(name='flashbang', help='flash a mf. make sure to pick a target TW: Loud scawy noise')
 async def flash(ctx, member:typing.Optional[discord.Member]):
-  pic = discord.File('think-fast.gif')
+  pic = discord.File('assets/think-fast.gif')
 
   if member:
     await ctx.send(f"{member.mention}")
@@ -137,7 +152,7 @@ async def flash(ctx, member:typing.Optional[discord.Member]):
 @bot.command(name='titties', help='send pics of titties')
 async def titties(ctx):
   author = ctx.author.name
-  pic = discord.File('caught-in.gif')
+  pic = discord.File('assets/caught-in.gif')
 
   await ctx.send('Looking for titty pics online...')
   await asyncio.sleep(2)
@@ -175,6 +190,43 @@ async def titties(ctx):
     await ctx.send("Imma reset that counter for ya ;)")
     del db[author]
 
+@bot.command(name='banish', help='Send a homie to horny jail')
+async def banish(ctx, member:typing.Optional[discord.Member]):
+  weeb_role = discord.utils.get(ctx.guild.roles, name="Weeb")
+  
+  if member:
+    await ctx.send(f"{member.mention}. You have been banished to horny jail! Reflect upon your sins and repent.")
+    await bonk(ctx,member)
+    await start_horny_timer(ctx, weeb_role, member)
+    await ctx.send(f"{member.mention}. You have been forgiven...")
+
+  else:
+    db_key=ctx.author.name+"-horny-miss"
+    
+    if db_key in db.keys():
+      db[db_key]+=1
+      await ctx.send('You must signal the prisoner\nThis waste of time will not go unnoticed!')
+      if db[db_key] == 10:
+        await ctx.send('Now suffer the consecuences of your actions!')
+        await start_horny_timer(ctx, weeb_role, ctx.author)
+        db[db_key] = 1
+    else:
+      await ctx.send('You must signal the prisoner\nThis waste of time will not go unnoticed!')
+      db[db_key]=1
+
+async def start_horny_timer(ctx, role, member):
+  timer = 60
+  embed = discord.Embed(title="Banished!", description=f"{member.mention} has been banished ", colour=discord.Colour.light_gray())
+  embed.add_field(name="Time sentence:", value=f"{timer} seconds", inline=False)
+  await member.send(embed=embed)
+  await ctx.send(embed=embed)
+
+  await member.send(file=discord.File('assets/baka-dead.mp4'))
+
+  await member.remove_roles(role)
+  await asyncio.sleep(timer)
+  await member.add_roles(role)
+
 @bot.listen('on_message')
 async def fuck_it(message):
   msg = helper_func.clean_message(message.content)
@@ -188,5 +240,8 @@ async def fuck_it(message):
   if banned_words.intersection(msg):
     await message.channel.send('Watch your language!')
 
+  if "huh" in msg:
+    await message.channel.send(file=discord.File('assets/animal-pics/huh_wuh.png'))
+
 keep_alive()
-bot.run(BOT_TOKEN)
+bot.run(BOT_TOKEN, reconnect=True)
