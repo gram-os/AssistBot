@@ -20,8 +20,6 @@ animal_pics = os.listdir(animal_path)
 
 banned_words = set(["fuck","fucking", "shit", "damn", "ass", "coochie", "dick", "nazi", "bitch", "pussy", "crap", "cummies","bussy","bicho","puñeta", "fk","crapper", "craptastic", "shitter", ])
 
-horny_jail=[]
-
 bot = commands.Bot(command_prefix='-')
 
 @bot.event
@@ -55,6 +53,12 @@ async def whos_that_animal(ctx):
       index=random.randrange(0,len(animal_pics))
   response = discord.File(animal_path+animal_pics[index])
   await ctx.send(file = response)
+
+@bot.command(name='snom', help='A friend-shaped command')
+async def snom(ctx):  
+  response = discord.File("assets/Snom/"+random.choice(os.listdir("assets/Snom")))
+  await ctx.send(file = response)
+
 
 @bot.command(name='hello', help='Says hello!')
 async def hello(ctx):
@@ -134,6 +138,18 @@ async def flashVC(ctx, target:typing.Optional[discord.Member]):
       await target.move_to(og_channel)
   else:
     print(f"{target} was not connected to VC")
+
+@bot.command(name='put-the-cat-on', help='put the cat on the mic')
+async def meow(ctx):
+  channel =ctx.author.voice.channel
+  if not channel:
+    ctx.send('You need to be connected to the voice channel in order to put the cat on the mic!')
+    return
+  voice = await channel.connect()
+  await ctx.send(file=discord.File('assets/cat-screaming.gif'))
+  voice.play(discord.FFmpegPCMAudio('assets/cat.mp3'))
+  await asyncio.sleep(20)
+  await ctx.guild.voice_client.disconnect()
 
 @bot.command(name='flashbang', help='flash a mf. make sure to pick a target TW: Loud scawy noise')
 async def flash(ctx, member:typing.Optional[discord.Member]):
@@ -215,7 +231,7 @@ async def banish(ctx, member:typing.Optional[discord.Member]):
       db[db_key]=1
 
 async def start_horny_timer(ctx, role, member):
-  timer = 60
+  timer = 300
   embed = discord.Embed(title="Banished!", description=f"{member.mention} has been banished ", colour=discord.Colour.light_gray())
   embed.add_field(name="Time sentence:", value=f"{timer} seconds", inline=False)
   await member.send(embed=embed)
@@ -242,6 +258,12 @@ async def fuck_it(message):
 
   if "huh" in msg:
     await message.channel.send(file=discord.File('assets/animal-pics/huh_wuh.png'))
+  
+  if "sus" in msg:
+    await message.channel.send("ඞ")
+
+  if "sussy" in msg:
+    await message.channel.send("ඞ")
 
 keep_alive()
 bot.run(BOT_TOKEN, reconnect=True)
